@@ -3,18 +3,22 @@ class GameCanvas{
     constructor(){
         this.ctx = document.getElementById("canvas").getContext("2d");
         this.background = new Background(this.ctx, 900, 500)
-       
+        this.bird = new Bird(this.ctx);
         this.fps = 60;
         this.framesCounter = 0
         this.obstaclesCreated = [];
+       
+
+        console.log(this.bird.image.src)
     }
 
     draw(){
-        this.background.draw()
+        this.background.draw();
+        this.bird.draw();
         this.obstaclesCreated.forEach(function(obstacle){
             obstacle.draw();
-        })
-        
+        });
+        this.bird.y += 7;
     }
 
 

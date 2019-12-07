@@ -3,10 +3,12 @@ window.onload = function() {
     startGame();
   };
 
+
+
   function startGame() {
     game = new GameCanvas();
     game.redenrizado();
-
+    // game.draw();
   }
 
 };
