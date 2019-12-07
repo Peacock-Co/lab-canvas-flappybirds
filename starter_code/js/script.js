@@ -5,8 +5,8 @@ window.onload = function() {
 
   function startGame() {
     game = new GameCanvas();
-    game.draw();
-    
+    game.redenrizado();
+
   }
 
 };
