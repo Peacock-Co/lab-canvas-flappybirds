@@ -1,78 +1,109 @@
 let game;
-class GameCanvas{
-    constructor(){
+class GameCanvas {
+    constructor() {
+        this.canvasWidth = 900;
+        this.canvasHeight = 600;
+        this.floorHeight = 50;
         this.ctx = document.getElementById("canvas").getContext("2d");
-        this.background = new Background(this.ctx, 900, 500)
-       
-        this.fps = 60;
-        this.framesCounter = 0
+
+        this.background = new Background(this.ctx, this.canvasWidth, this.canvasHeight);
+        this.floor = new Floor(this.ctx, this.canvasWidth, this.canvasHeight, this.floorHeight);
+        this.bird = new Bird(this.ctx, this.canvasHeight);
+        this.scoreboard = new ScoreBoard(this.ctx, this.canvasWidth, this.canvasHeight);
+
         this.obstaclesCreated = [];
+
+        this.fps = 60;
+        this.framesCounter = 0;
+        this.score = 0;
     }
 
-    draw(){
-        this.background.draw()
-        this.obstaclesCreated.forEach(function(obstacle){
+    draw() {
+        this.background.draw();
+        this.bird.draw(this.framesCounter);
+        this.obstaclesCreated.forEach(function (obstacle) {
             obstacle.draw();
+        });
+
+        this.floor.draw();
+        this.scoreboard.draw(this.score);
+    }
+
+    move() {
+        this.bird.move();
+        this.obstaclesCreated.forEach(function (obstacle) {
+            obstacle.move();
+        });
+    }
+
+    redenrizado() {
+        this.interval = setInterval(() => {
+            this.framesCounter++;
+
+            this.clear();
+            this.draw();
+            this.move();
+            this.clearObstacle();
+
+            if (this.isCollision() || this.isCollisionWithFloor()) this.gameOver();
+
+            if (this.framesCounter % 100 === 0) {
+                this.generateObstacle();
+                this.updateScore();
+            }
+
+            this.framesCounter = (this.framesCounter > 1000) ? this.framesCounter = 0 : this.framesCounter;
+
+        }, 1000 / this.fps);
+    }
+
+    generateObstacle() {
+        let displacement = 100;
+        let gap = 100;
+
+        let randomDisplacement = Math.floor(Math.random() * (displacement - (-displacement)) + (-displacement));
+        this.obstaclesCreated.push(new Obstacles(this.ctx, randomDisplacement, gap, this.canvasWidth, this.canvasHeight));
+    }
+
+    clear() {
+        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
+
+    isCollision() {
+        return this.obstaclesCreated.some(obs => {
+            return (
+                // Check collision in x with both pipes
+                this.bird.x + this.bird.width > obs.x &&
+                obs.x + obs.width > this.bird.x &&
+
+                // Check collision in y with top pipe
+                ((this.bird.y + this.bird.height > obs.y &&
+                obs.y + obs.height > this.bird.y) ||
+
+                // Check collision in y with bottom pipe
+                (this.bird.y + this.bird.height > obs.y2 &&
+                obs.y2 + obs.height > this.bird.y))
+            )
         })
-        
     }
 
-
-    redenrizado(){
-       this.interval = setInterval(()=> {
-        this.framesCounter++
-        
-        
-    
-        this.clear()
-        this.draw()
-        this.move()
-        this.clearObstacle()
-        
-        if(this.framesCounter % 100 === 0) this.generateObstacle()
-        if(this.framesCounter > 1000) this.framesCounter = 0; 
-    
-       },1000/this.fps)
+    isCollisionWithFloor() {
+        return this.bird.y + this.bird.height > this.canvasHeight - this.floorHeight;
     }
 
-    generateObstacle(){
-        this.obstaclesCreated.push(new Obstacles(this.ctx, Math.floor(Math.random() * (100 - (-100)) + (-100))))
-        
+    clearObstacle() {
+        this.obstaclesCreated = this.obstaclesCreated.filter(function (obstacle) {
+            return obstacle.x >= -140;
+        });
     }
 
-    clear(){
-        this.ctx.clearRect(0,0,900,500)
+    updateScore() {
+        this.score += this.obstaclesCreated.filter(function (obstacle) {
+            return obstacle.x < 140;
+        }).length;
     }
 
-    clearObstacle(){
-        this.obstaclesCreated = this.obstaclesCreated.filter(function(obstacle){
-            console.log("Alex te queremos!")
-            return obstacle.x >= -200
-        })
+    gameOver() {
+        clearInterval(this.interval);
     }
-
-    move(){
-        this.obstaclesCreated.forEach(function(obstacle){
-            obstacle.move()
-        })
-    }
-
 }
-
-
-/*
-Bucleo de renderizado
-let delta = 0;
-let last = 0;
-function draw(timestamp){
-  delta = timestamp - last;
-  last = timestamp;
-  let fps = 1000/delta;
-  ctx.clearRect(0,0,500,500)
-  pepe.draw(fps);
-  luis.draw(fps);
-  ctx.fillText("FPS: " + Math.round(fps), 20, 20);
-  window.requestAnimationFrame(draw);
-}
-​*/
-//window.requestAnimationFrame(draw)
